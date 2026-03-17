@@ -1,13 +1,12 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <SidebarProvider>
@@ -28,14 +27,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Button>
                 </>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate("/auth")}
-                  className="rounded-xl gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
+                <Button variant="outline" size="sm" asChild className="rounded-xl gap-2">
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </Link>
                 </Button>
               )}
             </div>
