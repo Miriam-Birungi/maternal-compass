@@ -34,7 +34,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </Button>
               )}
-              )}
             </div>
           </header>
           <main className="flex-1 overflow-y-auto">{children}</main>
