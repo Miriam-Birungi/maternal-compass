@@ -9,12 +9,15 @@ import {
   MessageCircle,
   Settings,
   Heart,
+  Plus,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -24,7 +27,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navItems = [
+const authedNavItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "My Pregnancy Journey", url: "/journey", icon: Baby },
   { title: "Appointments", url: "/appointments", icon: CalendarDays },
@@ -33,13 +36,18 @@ const navItems = [
   { title: "Exercise", url: "/exercise", icon: Dumbbell },
   { title: "Symptoms Checker", url: "/symptoms", icon: Stethoscope },
   { title: "Ask Assistant", url: "/assistant", icon: MessageCircle },
-  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user } = useAuth();
+
+  const itemClass = (active: boolean) =>
+    `rounded-xl px-3 py-2.5 transition-colors hover:bg-accent ${
+      active ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"
+    }`;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -59,28 +67,72 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
-                const active = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
+              {user ? (
+                authedNavItems.map((item) => {
+                  const active = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          end
+                          className={itemClass(active)}
+                          activeClassName="bg-accent text-accent-foreground font-medium"
+                        >
+                          <item.icon className="mr-3 h-[18px] w-[18px] shrink-0" />
+                          {!collapsed && <span className="text-sm">{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              ) : (
+                <>
+                  <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to={item.url}
+                        to="/"
                         end
-                        className={`rounded-xl px-3 py-2.5 transition-colors hover:bg-accent ${active ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"}`}
+                        className={itemClass(location.pathname === "/")}
                         activeClassName="bg-accent text-accent-foreground font-medium"
                       >
-                        <item.icon className="mr-3 h-[18px] w-[18px] shrink-0" />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
+                        <Home className="mr-3 h-[18px] w-[18px] shrink-0" />
+                        {!collapsed && <span className="text-sm">Home</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      disabled
+                      className={`${itemClass(false)} opacity-50 cursor-not-allowed`}
+                    >
+                      <Plus className="mr-3 h-[18px] w-[18px] shrink-0" />
+                      {!collapsed && <span className="text-sm">New Chat</span>}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="px-3 pb-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink
+                to="/settings"
+                end
+                className={itemClass(location.pathname === "/settings")}
+                activeClassName="bg-accent text-accent-foreground font-medium"
+              >
+                <Settings className="mr-3 h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span className="text-sm">Settings</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
