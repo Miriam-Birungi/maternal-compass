@@ -80,10 +80,10 @@ export function AppSidebar() {
                 <>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <NavLink to="/" className={itemClass(false)}>
+                      <button className={itemClass(false)}> {/* Changed to button to avoid acting as another Home link */}
                         <Plus className="mr-3 h-[18px] w-[18px] shrink-0" />
                         {!collapsed && <span className="text-sm">New Chat</span>}
-                      </NavLink>
+                      </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 

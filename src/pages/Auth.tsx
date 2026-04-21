@@ -1,15 +1,13 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,44 +17,62 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) navigate("/");
   }, [user, navigate]);
 
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    if (mode === "signup") {
+      setIsSignUp(true);
+    } else if (mode === "signin") {
+      setIsSignUp(false);
+    }
+  }, [searchParams]);
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: fullName },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        toast.success("Check your email to confirm your account!");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate("/");
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
+    
+    // Validate inputs
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
     }
+    
+    if (isSignUp && !fullName) {
+      toast.error("Please enter your full name");
+      return;
+    }
+
+    setLoading(true);
+    const cleanEmail = email.trim();
+    
+    // Mocking the authentication for demo purposes to ignore Supabase configuration for now
+    setTimeout(() => {
+      const mockUser = {
+        id: "demo-user-id",
+        email: cleanEmail,
+        user_metadata: { full_name: fullName || cleanEmail.split('@')[0] }
+      };
+      localStorage.setItem("mamacare_demo_user", JSON.stringify(mockUser));
+      toast.success(isSignUp ? "Account created (Demo Mode)" : "Signed in (Demo Mode)");
+      setLoading(false);
+      navigate("/");
+    }, 800);
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) toast.error("Failed to sign in with Google");
+    setLoading(true);
+    setTimeout(() => {
+      const mockUser = { id: "google-demo-id", email: "google.user@example.com", user_metadata: { full_name: "Google Demo User" } };
+      localStorage.setItem("mamacare_demo_user", JSON.stringify(mockUser));
+      toast.success("Signed in with Google (Demo Mode)");
+      setLoading(false);
+      navigate("/");
+    }, 800);
   };
 
   return (
@@ -88,8 +104,9 @@ const Auth = () => {
           {/* Google */}
           <Button
             variant="outline"
-            className="w-full mb-4 h-11 rounded-xl"
+            className="w-full mb-4 h-12 rounded-xl font-semibold text-base hover:bg-accent transition-colors"
             onClick={handleGoogleSignIn}
+            disabled={loading}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -118,7 +135,7 @@ const Auth = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Your name"
-                    className="pl-10 h-11 rounded-xl"
+                    className="pl-10 h-12 rounded-xl"
                     required
                   />
                 </div>
@@ -134,7 +151,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="pl-10 h-11 rounded-xl"
+                  className="pl-10 h-12 rounded-xl"
                   required
                 />
               </div>
@@ -149,9 +166,8 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-10 pr-10 h-11 rounded-xl"
+                  className="pl-10 pr-10 h-12 rounded-xl"
                   required
-                  minLength={6}
                 />
                 <button
                   type="button"
@@ -162,9 +178,16 @@ const Auth = () => {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-11 rounded-xl" disabled={loading}>
+            <Button type="submit" className="w-full h-12 rounded-xl font-semibold text-base" disabled={loading}>
               {loading ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}
             </Button>
+            
+            {/* Demo Credentials Info */}
+            <div className="mt-4 p-3 bg-secondary/10 border border-secondary/30 rounded-lg">
+              <p className="text-xs text-muted-foreground text-center">
+                💡 <span className="font-semibold">Demo Mode:</span> Use any email and password to create an account. Use the same credentials to sign in.
+              </p>
+            </div>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-5">

@@ -1,18 +1,45 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { ChatInput } from "@/components/ChatInput";
 import { QuickActions } from "@/components/QuickActions";
 import { PregnancyProgressCard } from "@/components/PregnancyProgressCard";
 import { HealthSummaryCard } from "@/components/HealthSummaryCard";
-import { DailyRecommendationsCard } from "@/components/DailyRecommendationsCard";
-import { AppointmentCard } from "@/components/AppointmentCard";
 import { CommonQuestions } from "@/components/CommonQuestions";
 import { useAuth } from "@/contexts/AuthContext";
-import { Baby } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Baby, Heart, ArrowRight } from "lucide-react";
 
 const Index = () => {
-  const { user, profile } = useAuth();
+  const { user: supabaseUser, profile: supabaseProfile, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Fallback to demo user if Supabase is ignored
+  const demoUser = JSON.parse(localStorage.getItem("mamacare_demo_user") || "null");
+  const user = supabaseUser || demoUser;
+  const profile = supabaseProfile || (demoUser ? { full_name: demoUser.user_metadata?.full_name } : null);
   const firstName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
+
+  const handleSignIn = () => {
+    navigate("/auth?mode=signin");
+  };
+
+  const handleCreateAccount = () => {
+    navigate("/auth?mode=signup");
+  };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -62,13 +89,52 @@ const Index = () => {
           <CommonQuestions />
         </div>
 
-        {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <PregnancyProgressCard />
-          <HealthSummaryCard />
-          <DailyRecommendationsCard />
-          <AppointmentCard />
-        </div>
+        {/* Conditional Rendering: Auth Prompt or Dashboard Cards */}
+        {!user ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-16 max-w-2xl mx-auto"
+          >
+            {/* Unlock Dashboard Card */}
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 flex flex-col justify-center items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                <Heart className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Unlock Your Dashboard
+              </h2>
+              <p className="text-muted-foreground mb-8">
+                Sign in to access personalized recommendations, appointment tracking, health summaries, and more to support your pregnancy journey.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+                <Button
+                  onClick={handleSignIn}
+                  size="lg"
+                  className="gap-2"
+                >
+                  Sign In
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={handleCreateAccount}
+                  variant="outline"
+                  size="lg"
+                  className="gap-2"
+                >
+                  Create Account
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* Dashboard Cards - Only shown when user is authenticated */
+          // All dashboard cards have been removed as per request.
+          // You can add new components here when needed.
+          <div className="text-center text-muted-foreground mt-16">Your personalized dashboard content will appear here.</div>
+        )}
       </div>
     </AppLayout>
   );

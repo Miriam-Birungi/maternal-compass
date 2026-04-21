@@ -1,20 +1,24 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user: supabaseUser, profile: supabaseProfile, signOut: supabaseSignOut } = useAuth();
+  const navigate = useNavigate();
   const demoUser = JSON.parse(localStorage.getItem("mamacare_demo_user") || "null");
   
   const user = supabaseUser || demoUser;
   const profile = supabaseProfile || (demoUser ? { full_name: demoUser.user_metadata?.full_name } : null);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     localStorage.removeItem("mamacare_demo_user");
-    supabaseSignOut();
+    await supabaseSignOut();
+    toast.success("Signed out successfully");
+    navigate("/");
   };
 
   return (
